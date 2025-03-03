@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Timer, 
-  Shuffle, 
+
   Lightbulb,
   RotateCcw,
-  Settings,
-  XCircle,
+
   Trophy,
   Heart,
   Diamond,
@@ -45,15 +44,6 @@ interface DifficultyLevel {
   name: string
   pairs: number
   timeLimit: number
-}
-
-// Power-up types
-type PowerUpType = 'shuffle' | 'hint' | 'slowTime'
-
-// Updated card variants for faster flip
-const cardVariants = {
-  hidden: { rotateY: 0 },
-  visible: { rotateY: 180, transition: { duration: 0.2, ease: "easeInOut" } },
 }
 
 function App() {
@@ -99,13 +89,9 @@ function App() {
   const [gameStarted, setGameStarted] = useState<boolean>(false)
   const [gameOver, setGameOver] = useState<boolean>(false)
   const [gameWon, setGameWon] = useState<boolean>(false)
-  const [powerUps, setPowerUps] = useState({
-    shuffle: 1,
-    hint: 2,
-    slowTime: 1
-  })
+
   const [hintCard, setHintCard] = useState<number | null>(null)
-  const [showSettings, setShowSettings] = useState<boolean>(false)
+
 
   // Card suit assignments
   const cardSuits: CardSuit[] = ['hearts', 'diamonds', 'clubs', 'spades']
@@ -183,7 +169,7 @@ function App() {
     setScore(0)
     setGameOver(false)
     setGameWon(false)
-    setPowerUps({ shuffle: 1, hint: 2, slowTime: 1 })
+
     setHintCard(null)
   }, [difficulty, cardSuits])
 
@@ -276,79 +262,7 @@ function App() {
     return () => clearInterval(timer)
   }, [gameStarted, gameOver])
 
-  // Use power-ups
-  const usePowerUp = (type: PowerUpType) => {
-    if (powerUps[type] <= 0 || gameOver || !gameStarted) return
-    
-    // Update power-up count
-    setPowerUps({
-      ...powerUps,
-      [type]: powerUps[type] - 1
-    })
-    
-    switch (type) {
-      case 'shuffle':
-        // Shuffle all cards that aren't matched
-        const shuffledCharacters = [...characters]
-        const unmatchedIndices = shuffledCharacters
-          .map((char, index) => char.matched ? -1 : index)
-          .filter(index => index !== -1)
-        
-        // Fisher-Yates shuffle
-        for (let i = unmatchedIndices.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-          const temp = shuffledCharacters[unmatchedIndices[i]]
-          shuffledCharacters[unmatchedIndices[i]] = shuffledCharacters[unmatchedIndices[j]]
-          shuffledCharacters[unmatchedIndices[j]] = temp
-        }
-        
-        setCharacters(shuffledCharacters)
-        break
-        
-      case 'hint':
-        // Find an unmatched pair
-        const unmatchedPairs = [];
-        const characterMap = new Map();
-        
-        // Group characters by name to find pairs
-        characters.forEach((char, idx) => {
-          if (!char.matched) {
-            if (!characterMap.has(char.name)) {
-              characterMap.set(char.name, [idx]);
-            } else {
-              characterMap.get(char.name).push(idx);
-            }
-          }
-        });
-        
-        // Find character names that have unmatched pairs
-        for (const [name, indices] of characterMap.entries()) {
-          if (indices.length === 2) {
-            unmatchedPairs.push(indices);
-          }
-        }
-        
-        if (unmatchedPairs.length > 0) {
-          // Select a random pair
-          const randomPair = unmatchedPairs[Math.floor(Math.random() * unmatchedPairs.length)];
-          // Select one card from the pair to hint
-          const hintCardIndex = randomPair[Math.floor(Math.random() * 2)];
-          
-          setHintCard(hintCardIndex);
-          
-          // Clear hint after 3 seconds
-          setTimeout(() => {
-            setHintCard(null);
-          }, 3000);
-        }
-        break
-        
-      case 'slowTime':
-        // Add time
-        setTimeLeft(prevTime => prevTime + 10)
-        break
-    }
-  }
+
 
   // Updated grid layout
   const getGridColumns = () => {
